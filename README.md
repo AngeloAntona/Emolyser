@@ -51,6 +51,7 @@ sadness      729
 happiness    582
 fear         210
 ```
+(*Potrebbe essere necessario equilibrare il numero di campioni delle diverse categorie effettuando un oversampling o un subsampling dei campioni, ma per brevità saltiamo questo passaggio*).
 # 2. Estrazione delle caratteristiche audio
 Attraverso la seguente funzione:
 ``` Python
@@ -77,11 +78,10 @@ Applichiamo la funzione precedentemente citata a tutti i file audio:
 100%|████████████████████████████████| 1521/1521 [03:45<00:00, 6.76it/s]
 Numero di campioni con caratteristiche estratte: 1521
 ```
-# Preparazione dei dati per l'input della rete neurale
+# 3. Preparazione dei dati per l'input della rete neurale
 Abbiamo adesso la matrice delle **features** e il vettore delle **etichette**. Ora possiamo creare un DataFrame, che sarà l'input della nostra rete neurale:
 ``` Python
 features_df = pd.DataFrame(features, columns=['feature', 'label'])
-print(features_df.head())
 ```
 La struttura dati sarà del tipo:
 ```
@@ -91,8 +91,9 @@ La struttura dati sarà del tipo:
 2  [-155.02774, 115.9887, 19.196737, 53.457127, 1...  happiness
 3  [-294.01443, 138.91287, 71.07505, 36.631863, 8...    sadness
 4  [-270.40778, 132.17728, 3.762553, 25.400993, 1...    sadness
+...
 ```
-Dal DataFrame ricaviamo **X** e **yy**, contenenti rispettivamente le caratteristiche numeriche di ciascuna canzone e l'etichetta di ciascuna canzone (*le etichette in ```yy```vengono convertite in un formato numerico matriciale 2D in cui ogni riga è del tipo ```100```, ```010``` o ```001```. Tale formato è detto "one-hot"*).
+Dal DataFrame precedente ricaviamo **X** e **yy**, contenenti rispettivamente le caratteristiche numeriche di ciascuna canzone e l'etichetta di ciascuna canzone (*le etichette in ```yy```vengono convertite in un formato numerico matriciale 2D in cui ogni riga è del tipo ```100```, ```010``` o ```001```. Tale formato è detto "one-hot"*).
 ```Python
 # Otteniamo X
 X = np.array(features_df['feature'].tolist())
@@ -105,15 +106,14 @@ Dall'intero dataset, partizioniamo gli elementi così da ottenere un *train set*
 ```Python
 x_train, x_test, y_train, y_test = train_test_split(X, yy, test_size=0.2, random_state=42)
 ```
-Le strutture dati ottenute saranno nei seguenti formati:
+Le strutture dati ottenute saranno:
 ```
 Forma di X: (1521, 40)
 Forma di yy: (1521, 3)
 Numero di campioni nel training set: 1216
 Numero di campioni nel testing set: 305
 ```
-dove X contiene i campioni, yy contiene le etichette.
-# Creazione della rete neurale
+# 4. Creazione della rete neurale
 Si passa poi alla rete neurale vera e propria. La semplice struttura scelta per la rete è la seguente:
 ```
  Layer (type)                        │ Output Shape                │ Param #
@@ -137,7 +137,7 @@ In sintesi, la struttura della rete neurale è la seguente:
 * **Livello iniziale**: Riceve l’input e lo elabora nei 256 neuroni, ampliando la rappresentazione dei dati originali.
 * **Livello intermedio**: Riduce l’informazione a 128 unità, mantenendo solo le caratteristiche essenziali.
 * **Livello finale**: Emette una previsione finale su quale emozione appartiene al dato in input, rappresentata in termini di probabilità.
-# Addestramento
+# 5. Addestramento
 L’**addestramento di un modello di deep learning** è il processo in cui il modello apprende dai dati di addestramento per fare previsioni accurate. In pratica, il modello viene sottoposto ripetutamente ai dati di addestramento per migliorare la sua capacità di riconoscere pattern. Durante ogni fase di addestramento, il modello ottimizza i suoi parametri (pesi e bias) per ridurre la differenza tra le sue predizioni e le etichette corrette.
 ```Python
 checkpointer = ModelCheckpoint(filepath='saved_models/audio_classification.keras', verbose=1, save_best_only=True)
@@ -156,8 +156,8 @@ ll modello in questione è addestrato per **20 epochs**, e per ciascuna epoch l�
 * **loss**: Il valore della funzione di perdita sui dati di addestramento. Una loss più bassa indica che il modello sta facendo previsioni più accurate.
 * **val_accuracy**: Accuratezza del modello sui dati di validazione. Questo valore mostra la capacità di generalizzazione del modello.
 * **val_loss**: La perdita calcolata sui dati di validazione. Minimizzare val_loss è fondamentale per evitare che il modello si adatti troppo ai dati di addestramento senza generalizzare bene.
-Alla epoch 17 la val_loss raggiunge 0.75070, mostrando un miglioramento continuo. Tuttavia, dal **Epoch 18** in poi, non si registrano ulteriori miglioramenti significativi. Per tale motivo ho deciso di fermare l'addestramento a 20 epoches.
-# Test
+Alla epoch 17 la val_loss raggiunge 0.75070, mostrando un miglioramento continuo. Tuttavia, dal **Epoch 18** in poi, non si registrano ulteriori miglioramenti significativi. Per tale motivo ho deciso di fermare l'addestramento a 20 epochs.
+# 6. Test
 Alla fine dell’addestramento, usiamo il test set
 ```Python
 model.load_weights('saved_models/audio_classification.keras')
@@ -168,12 +168,12 @@ per valutare l'accuratezza della predizione. Il risultato ottenuto è:
 Accuracy sul test set: 70.49%
 ```
 che sembra indicare una certa capacità del sistema nel riconoscere le emozioni delle canzoni.
-# Predizione su nuovi dati
+# 7. Predizione su nuovi dati
 Dal dataset di canzoni iniziale ho rimosso i campioni 3.mp3 e 4.mp3 e ho inserito tali campioni in un'apposita cartella test, separata dagli altri elementi del dataset. Ascoltando tali campioni, 3.mp3 mi trasmette tristezza, invece 4.mp3 mi trasmette felicità. 
-Useremo tali due canzoni per testare se la predizione del modello coincide con l'emozione da me percepita all'ascolto di tali due canzoni:
+Useremo tali due canzoni per testare se la predizione del modello coincide con l'emozione da me percepita all'ascolto di tali due canzoni. L'output a terminale è:
 ```
 L'emozione predetta per 'test/4.mp3' è: happiness
 
 L'emozione predetta per 'test/3.mp3' è: sadness
 ```
-Dai risultati possiamo concludere che, per quanto semplificato sia questo modello di riconoscimento delle emozioni delle canzoni, esso ha una buona capacità di categorizzazione.
+da cui possiamo concludere che, per quanto semplificato sia questo modello di riconoscimento delle emozioni delle canzoni, esso ha una buona capacità di categorizzazione.
