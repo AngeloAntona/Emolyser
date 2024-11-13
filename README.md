@@ -1,4 +1,4 @@
-# Intro e configurazione di base
+# 0. Intro e configurazione di base
 Per questo "esperimento" useremo il dataset scaricabile [qui][http://cvml.unige.ch/databases/DEAM/]. 
 E' inoltre necessario installare le seguenti librerie:
 ```
