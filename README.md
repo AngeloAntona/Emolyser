@@ -169,10 +169,7 @@ Accuracy sul test set: 70.49%
 ```
 che sembra indicare una certa capacità del sistema nel riconoscere le emozioni delle canzoni.
 # 7. Predizione su nuovi dati
-Dal dataset di canzoni iniziale ho rimosso i campioni 3.mp3 e 4.mp3 e ho inserito tali campioni in un'apposita cartella test, separata dagli altri elementi del dataset. Ascoltando tali campioni, 3.mp3 mi trasmette tristezza, invece 4.mp3 mi trasmette felicità. 
-
-[3.mp3](test/3.mp3)
-[4.mp3](test/4.mp3)
+Dal dataset di canzoni iniziale ho rimosso i campioni [3.mp3](test/3.mp3) e [4.mp3](test/4.mp3) e ho inserito tali campioni in un'apposita cartella test, separata dagli altri elementi del dataset. Ascoltando tali campioni, 3.mp3 mi trasmette tristezza, invece 4.mp3 mi trasmette felicità. 
 
 Useremo tali due canzoni per testare se la predizione del modello coincide con l'emozione da me percepita all'ascolto di tali due canzoni. L'output a terminale è:
 ```
