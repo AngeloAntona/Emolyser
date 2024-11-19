@@ -5,7 +5,7 @@
 During the course, we analyzed how AI and intelligent systems can be used to solve logical problems of various kinds. However, when applying these systems to music, an intriguing challenge arises: musical composition is not a purely "logical" task, even though it has a strong mathematical component. This led me to reflect on how complex it is for an AI system to understand and express emotions, a crucial element in the musical domain.
 
 Among the various artificial intelligence systems available  
-![First login](readme_files/AI_fields_diagram.png)  
+![Ai fields diagram](readme_files/AI_fields_diagram.png)  
 *(For an overview of other types of AI, you can visit [here](readme_files/AI_fields.md))*  
 I chose to use machine learning systems, with a particular focus on neural networks, to explore the ability of simple learning models to replicate emotions.
 
@@ -38,8 +38,11 @@ Additionally, we will use the following datasets:
 * Dataset for the second script: [EMOPIA](https://zenodo.org/records/5090631#.YPPo-JMzZz8).  
 *(You can find additional information about the two datasets [here](readme_files/dataset_info.md))*
 
-# Codice di Analisi delle Emozioni nelle Canzoni
-L'obiettivo è quello di creare e addestrare un modello che riconosca il tipo di emozione principale che una determinata canzone trasmette all'ascoltatore. Per semplicità useremo un set di emozioni molto molto semplice, catalogando l'intero spettro emotivo nelle sole etichette di **felicità**, **tristezza** e **paura**.
+# Song Emotion Analysis Code
+The goal is to create and train a model that recognizes the primary type of emotion a given song conveys to the listener. For simplicity, we will use a very basic set of emotions, categorizing the entire emotional spectrum into just the labels of **happiness**, **sadness**, and **fear**.
+
+![Code1 scheme](readme_files/Emotion_analysis_scheme.png)
+
 # 1. Caricamento dei dati
 Prima di tutto dobbiamo caricare all'interno del nostro programma il dataset e i metadati associati:
 ``` Python
