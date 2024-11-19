@@ -41,7 +41,7 @@ Additionally, we will use the following datasets:
 # Song Emotion Analysis Code
 The goal is to create and train a model that recognizes the primary type of emotion a given song conveys to the listener. For simplicity, we will use a very basic set of emotions, categorizing the entire emotional spectrum into just the labels of **happiness**, **sadness**, and **fear**.
 
-![Code1 scheme](readme_files/Emotion_analysis_scheme.png)
+![Code1 scheme](readme_files/code1_scheme.png)
 *(you can read a deeper analysis of the code [here](readme_files/code1_description.md))*
 ### 1. Data Loading
 ``` Python
@@ -179,3 +179,5 @@ L'emozione predetta per 'test/3.mp3' è: sadness
 which matches the emotion perceived while listening to the two tracks.
 
 # Song Emotion Generation Code
+![Code2 scheme](readme_files/code2_scheme.png)
+*(you can read a deeper analysis of the code [here](readme_files/code2_description.md))*
