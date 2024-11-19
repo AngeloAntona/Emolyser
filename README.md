@@ -62,21 +62,20 @@ The goal is to create and train a model that recognizes the primary type of emot
 annotations = pd.read_csv('data/annotations/annotations averaged per song/song_level/static_annotations_averaged_songs_1_2000.csv')
 ```
 ### 2. Emotion Assignment
+![Emotion cartesian diagram](readme_files/emotion_cartesian_diagram.png)
 We define a function to map the valence and arousal values to the emotions:
 ``` Python
 def assign_emotion(row):
-	valence = row[' valence_mean']
-	arousal = row[' arousal_mean']
-	if valence > 5 and arousal > 5:
-		return 'happiness'
-	elif valence <= 5 and arousal <= 5:
-		return 'sadness'
-	elif valence <= 5 and arousal > 5 and arousal < 7:
-		return 'fear'
-	elif valence <= 5 and arousal >= 7:
-		return 'anger'
-	else:
-		return None # Esclude altri stati emotivi
+    valence = row[' valence_mean']
+    arousal = row[' arousal_mean']
+    if valence > 5 and arousal > 5:
+        return 'happiness'
+    elif valence <= 5 and arousal <= 5:
+        return 'sadness'
+    elif valence <= 5 and arousal > 5:
+        return 'fear'
+    else:
+        return None  # Esclude altri stati emotivi
 ```
 and we apply that function to each song:
 ``` Python
