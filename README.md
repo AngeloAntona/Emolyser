@@ -43,19 +43,12 @@ The goal is to create and train a model that recognizes the primary type of emot
 
 ![Code1 scheme](readme_files/Emotion_analysis_scheme.png)
 *(you can read a deeper analysis of the code [here](readme_files/code1_description.md))*
-# 1. Caricamento dei dati
-Prima di tutto dobbiamo caricare all'interno del nostro programma il dataset e i metadati associati:
+### 1. Data Loading
 ``` Python
 annotations = pd.read_csv('data/annotations/annotations averaged per song/song_level/static_annotations_averaged_songs_1_2000.csv')
 ```
-Le annotation del database DEAM tentano di definire che emozione è trasmessa da una determinata canzone attraverso due misure:
-* **Valence:** misura quanto un’emozione sia positiva o negativa. In questo database, valence_mean varia da 1 a 10, dove:
-	* Valori **alti** (sopra 5) indicano emozioni positive (come felicità, eccitazione).
-	* Valori **bassi** (sotto 5) indicano emozioni negative (come tristezza, malinconia).
-* **Arousal:** misura l’intensità o l’attivazione dell’emozione, rappresentando quanto un’emozione sia energica o calma. Anche arousal_mean varia da 1 a 10, dove:
-	* Valori **alti** (sopra 5) indicano emozioni eccitate o energiche (come rabbia, eccitazione).
-	* Valori **bassi** (sotto 5) indicano emozioni più calme o rilassate (come tristezza o serenità).
-Per associare delle emozioni alle coppie di valori ```valence_mean - arousal_mean``` ho definito la funzione:
+### 2. Emotion Assignment
+We define a function to map the valence and arousal values to the emotions:
 ``` Python
 def assign_emotion(row):
 	valence = row[' valence_mean']
@@ -71,27 +64,26 @@ def assign_emotion(row):
 	else:
 		return None # Esclude altri stati emotivi
 ```
-e applicato tale funzione a tutte le righe delle annotation:
+and we apply that function to each song:
 ``` Python
 annotations['emotion'] = annotations.apply(assign_emotion, axis=1)
 ```
-Fatto ciò, il dataset che otteniamo avrà una struttura del tipo:
+The terminal output at this point is:
 ```
     song_id  valence_mean   valence_std   arousal_mean   arousal_std    emotion
 0        2            3.1          0.94            3.0          0.63    sadness
 3        5            4.4          2.01            5.3          1.85       fear
 4        7            5.8          1.47            6.4          1.69  happiness
 ```
-E una distribuzione delle emozioni nel dataset che è:
+and the distribution of emotions in the dataset is:
 ```
 emotion
 sadness      729
 happiness    582
 fear         210
 ```
-(*Potrebbe essere necessario equilibrare il numero di campioni delle diverse categorie effettuando un oversampling o un subsampling dei campioni, ma per brevità saltiamo questo passaggio*).
-# 2. Estrazione delle caratteristiche audio
-Attraverso la seguente funzione:
+### 3. Features Extraction (MFCC)
+We define a function to extract the songs features:
 ``` Python
 def extract_features(file_name):
 	try:
@@ -104,24 +96,17 @@ def extract_features(file_name):
 		print(f"Errore nell'elaborazione del file {file_name}: {e}")
 		return None
 ```
-estraiamo dai file audio i **Mel-frequency Cepstral Coefficients (MFCC)**, una rappresentazione comune delle caratteristiche audio ampiamente utilizzata nell’elaborazione audio e nel riconoscimento delle emozioni, della voce e di altre proprietà acustiche. 
-Gli MFCC sintetizzano le informazioni spettrali e temporali dell’audio in una rappresentazione compatta, consentendo alla rete neurale di apprendere pattern significativi come tono, intensità, e articolazione delle emozioni.
-
-L'output della funzione per ogni canzone è una matrice di MFCC, dove:
-* Le righe rappresentano i diversi coefficienti (in questo caso, 40 coefficienti per ciascun segmento temporale).
-* Le colonne rappresentano i frame temporali lungo il segnale audio.
-
-Applichiamo la funzione precedentemente citata a tutti i file audio:
+We apply the previously mentioned function to all the audio files:
 ```
 100%|████████████████████████████████| 1521/1521 [03:45<00:00, 6.76it/s]
 Numero di campioni con caratteristiche estratte: 1521
 ```
-# 3. Preparazione dei dati per l'input della rete neurale
-Abbiamo adesso la matrice delle **features** e il vettore delle **etichette**. Ora possiamo creare un DataFrame, che sarà l'input della nostra rete neurale:
+### 3. Data Preparation
+We now have the **features** matrix and the **labels** vector. We can create a DataFrame to serve as input for our neural network:
 ``` Python
 features_df = pd.DataFrame(features, columns=['feature', 'label'])
 ```
-La struttura dati sarà del tipo:
+The data structure will be of the type:
 ```
 	feature                                             label
 0  [-144.26477, 123.45465, -21.118523, 36.46806, ...    sadness
@@ -131,7 +116,7 @@ La struttura dati sarà del tipo:
 4  [-270.40778, 132.17728, 3.762553, 25.400993, 1...    sadness
 ...
 ```
-Dal DataFrame precedente ricaviamo **X** e **yy**, contenenti rispettivamente le caratteristiche numeriche di ciascuna canzone e l'etichetta di ciascuna canzone (*le etichette in ```yy```vengono convertite in un formato numerico matriciale 2D in cui ogni riga è del tipo ```100```, ```010``` o ```001```. Tale formato è detto "one-hot"*).
+We derive **X** and **yy**:
 ```Python
 # Otteniamo X
 X = np.array(features_df['feature'].tolist())
@@ -140,11 +125,11 @@ y = np.array(features_df['label'].tolist())
 le = LabelEncoder()
 yy = to_categorical(le.fit_transform(y))
 ```
-Dall'intero dataset, partizioniamo gli elementi così da ottenere un *train set* e un *test set*:
+We partition the elements to obtain a *train set* and a *test set*:
 ```Python
 x_train, x_test, y_train, y_test = train_test_split(X, yy, test_size=0.2, random_state=42)
 ```
-Le strutture dati ottenute saranno:
+The resulting data structures will be:
 ```
 Forma di X: (1521, 40)
 Forma di yy: (1521, 3)
