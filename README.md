@@ -15,13 +15,30 @@ The choice is based on the flexibility of neural networks in modeling complex ph
 
 This exploration seeks to address a central question: can an AI system, based on relatively simple algorithms, not only "understand" but also "express" emotions through music?
 
+# System Configuration
+To execute the scripts we will discuss later, we need to install several libraries. Use the following command to install them:
+```
+pip install pandas librosa numpy joblib tqdm scikit-learn tensorflow music21
+```
+The libraries used are:
+1. **NumPy:** A fundamental library for fast numerical operations and multidimensional arrays, essential for scientific computation.
+2. **Pandas:** Crucial for data manipulation and analysis, such as reading CSV files and managing structured tables.
+3. **Scikit-learn:** Provides tools for dataset splitting, label encoding, and other basic machine learning functionalities.
+4. **TensorFlow:** An advanced deep learning library used to build, train, and save neural network models.
+5. **Librosa:** Used for processing audio files, including feature extraction (e.g., MFCC). It is key for audio analysis.
+6. **Music21:** Necessary for handling MIDI files, analyzing notes and chords, and creating melodies.
+7. **Joblib:** Used for parallel processing to speed up data handling or complex functions.
+8. **TQDM:** Adds a progress bar to monitor iterative processes, especially useful for large datasets.
+9. **Pickle:** Part of Python's standard library; no installation required. Used for saving and loading objects, such as label encoders.
+10. **OS and Glob:** Both are part of Python's standard library. OS is used for file and directory management, while Glob works with file name patterns.
+11. **Collections (Counter):** Another standard Python library, used for operations like counting elements in a list.
 
-# 0. Intro e configurazione di base
-Per questo "esperimento" useremo il dataset scaricabile [qui](http://cvml.unige.ch/databases/DEAM/). 
-E' inoltre necessario installare le seguenti librerie:
-```
-pip install pandas librosa numpy joblib tqdm scikit-learn tensorflow
-```
+Additionally, we will use the following datasets:
+* Dataset for the first script: [DEAM](http://cvml.unige.ch/databases/DEAM/).
+* Dataset for the second script: [EMOPIA](https://zenodo.org/records/5090631#.YPPo-JMzZz8).  
+*(You can find additional information about the two datasets [here](readme_files/dataset_info.md))*
+
+# Codice di Analisi delle Emozioni nelle Canzoni
 L'obiettivo è quello di creare e addestrare un modello che riconosca il tipo di emozione principale che una determinata canzone trasmette all'ascoltatore. Per semplicità useremo un set di emozioni molto molto semplice, catalogando l'intero spettro emotivo nelle sole etichette di **felicità**, **tristezza** e **paura**.
 # 1. Caricamento dei dati
 Prima di tutto dobbiamo caricare all'interno del nostro programma il dataset e i metadati associati:
