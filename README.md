@@ -1,3 +1,21 @@
+# 0. Introduction
+```
+(0 - 2 minutes: explanation of the branching definitions Artificial Intelligence -> Machine Learning -> Neural Network -> Generative AI).
+```
+During the course, we analyzed how AI and intelligent systems can be used to solve logical problems of various kinds. However, when applying these systems to music, an intriguing challenge arises: musical composition is not a purely "logical" task, even though it has a strong mathematical component. This led me to reflect on how complex it is for an AI system to understand and express emotions, a crucial element in the musical domain.
+
+Among the various artificial intelligence systems available  
+![First login](readme_files/AI_fields_diagram.png)  
+*(For an overview of other types of AI, you can visit [here](readme_files/AI_fields.md))*  
+I chose to use machine learning systems, with a particular focus on neural networks, to explore the ability of simple learning models to replicate emotions.
+
+The choice is based on the flexibility of neural networks in modeling complex phenomena and their ability to learn rich representations from data. Specifically, I applied these techniques to two problems:  
+  1. The classification of emotions conveyed by musical tracks.  
+  2. The generation of melodies conditioned by specific emotions.  
+
+This exploration seeks to address a central question: can an AI system, based on relatively simple algorithms, not only "understand" but also "express" emotions through music?
+
+
 # 0. Intro e configurazione di base
 Per questo "esperimento" useremo il dataset scaricabile [qui](http://cvml.unige.ch/databases/DEAM/). 
 E' inoltre necessario installare le seguenti librerie:
