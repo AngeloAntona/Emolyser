@@ -1,4 +1,4 @@
-# 0. Introduction
+# Introduction
 ```
 (0 - 2 minutes: explanation of the branching definitions Artificial Intelligence -> Machine Learning -> Neural Network -> Generative AI).
 ```
@@ -177,3 +177,5 @@ L'emozione predetta per 'test/4.mp3' è: happiness
 L'emozione predetta per 'test/3.mp3' è: sadness
 ```
 which matches the emotion perceived while listening to the two tracks.
+
+# Song Emotion Generation Code
