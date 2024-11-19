@@ -136,8 +136,7 @@ Forma di yy: (1521, 3)
 Numero di campioni nel training set: 1216
 Numero di campioni nel testing set: 305
 ```
-# 4. Creazione della rete neurale
-Si passa poi alla rete neurale vera e propria. La semplice struttura scelta per la rete è la seguente:
+### 4. Training
 ```
  Layer (type)                        │ Output Shape                │ Param #
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━
@@ -152,52 +151,29 @@ Si passa poi alla rete neurale vera e propria. La semplice struttura scelta per 
  dense_2 (Dense)                     │ (None, 3)                   │ 387
  activation_2 (Activation)           │ (None, 3)                   │ 0
 ```
-nella quale:
-* **Nodi di tipo *"dense"*:** sono il fulcro della rete neurale. In essi, ogni neurone è connesso a tutti i neuroni della rete successiva. Questi livelli consentono alla rete di apprendere le relazioni complesse tra le caratteristiche in input e le emozioni target.
-* **Nodi di tipo *"activation"*:** sono nodi che implementano funzioni non lineari. In tal modo si fa si che la rete apprenda relazioni complesse nei dati (**ReLU** trasforma le uscite negative in 0, **softmax** converte le uscite del livello finale in probabilità normalizzando l'output da 0 a 1).
-* **Nodi di tipo *"dropout"*:** disattivano randomicamente una frazione di neuroni di un livello. Questo permette di evitare l'overfitting, impedendo alla rete di fare troppo affidamento su specifici percorsi di neuroni.
-In sintesi, la struttura della rete neurale è la seguente:
-* **Livello iniziale**: Riceve l’input e lo elabora nei 256 neuroni, ampliando la rappresentazione dei dati originali.
-* **Livello intermedio**: Riduce l’informazione a 128 unità, mantenendo solo le caratteristiche essenziali.
-* **Livello finale**: Emette una previsione finale su quale emozione appartiene al dato in input, rappresentata in termini di probabilità.
-# 5. Addestramento
-L’**addestramento di un modello di deep learning** è il processo in cui il modello apprende dai dati di addestramento per fare previsioni accurate. In pratica, il modello viene sottoposto ripetutamente ai dati di addestramento per migliorare la sua capacità di riconoscere pattern. Durante ogni fase di addestramento, il modello ottimizza i suoi parametri (pesi e bias) per ridurre la differenza tra le sue predizioni e le etichette corrette.
+We train the model:
 ```Python
 checkpointer = ModelCheckpoint(filepath='saved_models/audio_classification.keras', verbose=1, save_best_only=True)
 
 history = model.fit(x_train, y_train, batch_size=32, epochs=20, validation_data=(x_test, y_test), callbacks=[checkpointer], verbose=1)
 ```
-Le **epochs** rappresentano il numero di volte in cui il modello percorre l’intero dataset di addestramento. Ogni volta che il modello passa attraverso l’intero dataset, completa una epoch:
-* **Forward pass**: Il modello elabora l’input, calcola l’output e confronta la predizione con l’etichetta reale.
-* **Calcolo della perdita**: La **perdita** (o “loss”) rappresenta la misura dell’errore tra la predizione e il risultato atteso. Durante l’addestramento, l’obiettivo è minimizzare questa perdita.
-* **Backward pass e aggiornamento dei pesi**: Usando la tecnica della retropropagazione backpropagation, l’errore viene retropropagato attraverso il modello per aggiornare i pesi e ridurre la perdita nelle successive iterazioni.
-
-Con più epochs, il modello apprende gradualmente a fare predizioni migliori. Un numero ottimale di epochs permette al modello di apprendere abbastanza senza “memorizzare” i dati di addestramento, garantendo così una buona capacità di generalizzazione.
-
-ll modello in questione è addestrato per **20 epochs**, e per ciascuna epoch l’output mostra informazioni su:
-* **accuracy**: La percentuale di predizioni corrette sul set di addestramento.
-* **loss**: Il valore della funzione di perdita sui dati di addestramento. Una loss più bassa indica che il modello sta facendo previsioni più accurate.
-* **val_accuracy**: Accuratezza del modello sui dati di validazione. Questo valore mostra la capacità di generalizzazione del modello.
-* **val_loss**: La perdita calcolata sui dati di validazione. Minimizzare val_loss è fondamentale per evitare che il modello si adatti troppo ai dati di addestramento senza generalizzare bene.
-Alla epoch 17 la val_loss raggiunge 0.75070, mostrando un miglioramento continuo. Tuttavia, dal **Epoch 18** in poi, non si registrano ulteriori miglioramenti significativi. Per tale motivo ho deciso di fermare l'addestramento a 20 epochs.
-# 6. Test
-Alla fine dell’addestramento, usiamo il test set
+### 5. Test
+At the end of the training, we use the test set
 ```Python
 model.load_weights('saved_models/audio_classification.keras')
 score = model.evaluate(x_test, y_test, verbose=0)
 ```
-per valutare l'accuratezza della predizione. Il risultato ottenuto è:
+to evaluate the prediction accuracy. The result obtained is:
 ```
 Accuracy sul test set: 70.49%
 ```
-che sembra indicare una certa capacità del sistema nel riconoscere le emozioni delle canzoni.
-# 7. Predizione su nuovi dati
-Dal dataset di canzoni iniziale ho rimosso i campioni [3.mp3](test/3.mp3) e [4.mp3](test/4.mp3) e ho inserito tali campioni in un'apposita cartella test, separata dagli altri elementi del dataset. Ascoltando tali campioni, 3.mp3 mi trasmette tristezza, invece 4.mp3 mi trasmette felicità. 
+### 6. Prediction
+From the initial song dataset, I removed the samples [3.mp3](test/3.mp3) and [4.mp3](test/4.mp3) and placed these samples in a separate test folder, apart from the other dataset elements.
 
-Useremo tali due canzoni per testare se la predizione del modello coincide con l'emozione da me percepita all'ascolto di tali due canzoni. L'output a terminale è:
+We will use these two songs to test if the model's prediction matches the emotion I perceived while listening to these two songs. The terminal output is:
 ```
 L'emozione predetta per 'test/4.mp3' è: happiness
 
 L'emozione predetta per 'test/3.mp3' è: sadness
 ```
-da cui possiamo concludere che, per quanto semplificato sia questo modello di riconoscimento delle emozioni delle canzoni, esso ha una buona capacità di categorizzazione.
+which matches the emotion perceived while listening to the two tracks.
