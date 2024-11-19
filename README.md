@@ -1,7 +1,21 @@
+# Table of Contents
+
+1. [Introduction](#introduction)  
+   - Overview of AI in music for emotion analysis and generation.  
+   - Focus on neural networks for emotion classification and melody generation.
+
+2. [System Configuration](#system-configuration)  
+   - Required libraries and datasets ([DEAM](http://cvml.unige.ch/databases/DEAM/), [EMOPIA](https://zenodo.org/records/5090631#.YPPo-JMzZz8)).
+
+3. [Emotion Analysis Code](#emotion-analysis-code)  
+   - Data preprocessing, feature extraction, and model training.  
+   - Emotion classification and test predictions.
+
+4. [Emotion Generation Code](#emotion-generation-code)  
+   - Note extraction, sequence creation, and GRU model training.  
+   - Melody generation and MIDI file export. 
+
 # Introduction
-```
-(0 - 2 minutes: explanation of the branching definitions Artificial Intelligence -> Machine Learning -> Neural Network -> Generative AI).
-```
 During the course, we analyzed how AI and intelligent systems can be used to solve logical problems of various kinds. However, when applying these systems to music, an intriguing challenge arises: musical composition is not a purely "logical" task, even though it has a strong mathematical component. This led me to reflect on how complex it is for an AI system to understand and express emotions, a crucial element in the musical domain.
 
 Among the various artificial intelligence systems available  
