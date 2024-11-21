@@ -234,11 +234,14 @@ L'emozione predetta per 'test/3.mp3' è: sadness
 which matches the emotion perceived while listening to the two tracks.
 
 # CODE2: Song Emotion Generation
+This section explains the process of generating melodies conditioned on specific emotions using a neural network trained on MIDI data. The goal is to create a system that can produce emotionally expressive music by analyzing patterns in the dataset.
+
 ![Code2 scheme](readme_files/code2_scheme.png)
 *(you can read a deeper analysis of the code [here](readme_files/code2_description.md))*
 
 ### Extract Notes
-For each emotion, we extract the notes from the MIDI files.
+We begin by extracting musical notes and chords from the MIDI files. Each file is associated with one of the predefined emotions: happiness, sadness, or fear (each song is contained in one folder between *"happiness", "sadness"* or *"fear"*).
+
 ```python
 def get_notes(emotion):
     notes = []
@@ -263,6 +266,8 @@ def get_notes(emotion):
     return notes
 ```
 
+This function extracts notes for all emotions and associates each note with its corresponding emotion label.
+
 ```python
 def get_all_notes_and_emotions():
     all_notes = []
@@ -274,67 +279,100 @@ def get_all_notes_and_emotions():
     return all_notes, all_emotions
 
 all_notes, all_emotions = get_all_notes_and_emotions()
+```
 
 ### Tokenize Notes and Emotions
-- **Notes**: Convert the notes into integers using a mapping dictionary.
-- **Emotions**: Encode the emotions using `LabelEncoder` from scikit-learn.
+Convert unique notes into integers using a mapping dictionary to create numerical representations of the music data.
+
 ```python
 # Tokenization of notes
 unique_notes = sorted(set(all_notes))
 note_to_int = {note: number for number, note in enumerate(unique_notes)}
 notes_as_int = [note_to_int[note] for note in all_notes]
-
+```
+Encode emotions into numerical labels using a LabelEncoder.
+```python
 # Encoding of emotions
 label_encoder = LabelEncoder()
 encoded_emotions = label_encoder.fit_transform(all_emotions)
 ```
-### Create In/Out Sequencies
-We create fixed-length sequences (`SEQUENCE_LENGTH`) for the model's input and output.
+### Create Input and Output Sequences
+We create sequences of fixed length (SEQUENCE_LENGTH) to be used as input for the model. Each sequence includes:
+	•	A series of notes.
+	•	The corresponding emotion.
+
+The model will predict the next note based on the input sequence and emotion.
+
 ```python
 network_input = []
 network_output = []
 network_emotion = []
 
 for i in range(len(notes_as_int) - SEQUENCE_LENGTH):
+    # la sequenza di input sono tutte le note analizzate fino ad ora
     seq_in = notes_as_int[i:i + SEQUENCE_LENGTH]
+    # la sequenza di output dovrebbe essere la nota successiva e la sua emozione
     seq_out = notes_as_int[i + SEQUENCE_LENGTH]
     emotion = encoded_emotions[i + SEQUENCE_LENGTH]
     network_input.append(seq_in)
     network_output.append(seq_out)
     network_emotion.append(emotion)
 ```
+
 ### Normalize Input
-- **Normalization of notes**
-- **Preparation of emotion input**
-- **Concatenation of notes and emotions**
+Machine learning frameworks like TensorFlow/Keras require input data to be in array format for training, so we convert the arrays in that format:
+
 ```python
 # Convert input to numpy arrays
 network_input = np.array(network_input)
 network_output = np.array(network_output)
 network_emotion = np.array(network_emotion)
+```
 
+We normalize the note sequences to ensure they are in the range [0, 1]:
+
+```
 # Normalization of notes
-n_vocab = len(unique_notes)
-network_input = network_input / float(n_vocab)
-network_input = network_input.reshape((network_input.shape[0], SEQUENCE_LENGTH, 1))
+n_vocab = len(unique_notes) # Total number of unique notes in the dataset
+network_input = network_input / float(n_vocab)  # Normalize to [0, 1]
+network_input = network_input.reshape((network_input.shape[0], SEQUENCE_LENGTH, 1)) # Reshape for GRU
+```
+We also normalize and replicate emotion labels to match the sequence length, allowing the model to integrate emotional context:
 
+```
 # Normalization and repetition of emotion
 emotion_normalized = network_emotion / float(max(network_emotion))
 emotion_input = emotion_normalized.reshape(-1, 1, 1)
 emotion_input = np.repeat(emotion_input, SEQUENCE_LENGTH, axis=1)
+```
 
+Concatenate normalized notes and emotions as input features:
+
+```
 # Concatenation of notes and emotions as features
 network_input = np.concatenate((network_input, emotion_input), axis=2)
-
-# Conversion of output to categorical
-network_output = to_categorical(network_output, num_classes=n_vocab)
 ```
-The dimensions of input and output sequencies are:
+
+The inputnetwork will have 50 "notes-emotions" array, each one on lenght 50000, as shown in the terminal output:
+
 ```plaintext
 Input dimensions: (50000, 50, 2)
+```
+# Conversion of output to categorical
+Converts the network_output (next note to predict) into a one-hot encoded format. The model outputs probabilities for all possible notes. Using one-hot encoding ensures the training process compares the predicted probability distribution to the correct note.
+```
+network_output = to_categorical(network_output, num_classes=n_vocab)
+```
+
+The dimensions of output sequencies are:
+
+```plaintext
 Output dimensions: (50000, 685)
 ```
+where 685 is the ocabulary size (number of unique notes).
+
 ### Training 
+The model uses GRU layers to process sequential data, with dense layers for output prediction. The structure of the model is:
 ```plaintext
 Model: "functional"
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
@@ -364,7 +402,8 @@ history = model.fit(network_input, network_output, epochs=50, batch_size=32, cal
 ```
 
 ### Evaluation
-The model we obtained is characterized by the following loss:
+This section describes how the model performs during training and how the final results are evaluated.
+
 ```plaintext
 Epoch 1/50
 1563/1563 [==============================] - 233s 148ms/step - loss: 5.0591
@@ -374,11 +413,21 @@ Epoch 50/50
 1563/1563 [==============================] - 243s 156ms/step - loss: 3.4806
 Epoch 50: loss did not improve from 3.49500
 ```
+Loss: Measures how well the model’s predictions match the expected output during training. Lower loss indicates better performance.
+
+The model saves its weights when the loss improves. This ensures only the best-performing version of the model is kept.
+
 ### Melody Generation
-We create an inverse dictionary to convert integers back to notes and define a function for temperature sampling.
+The trained model is now used to generate new melodies based on a specified emotion. 
+
+#### Initialization
+Firstly we convert the predicted integers (note indices) back into readable note/chord names:
+
 ```python
 int_to_note = {number: note for note, number in note_to_int.items()}
-
+```
+The next function is used to add randomness and creativity to the predictions made by the model when generating music. Without randomness, the model would always choose the most likely note, resulting in repetitive and predictable melodies.
+```
 def sample_with_temperature(preds, temperature=1.0):
     preds = np.asarray(preds).astype('float64')
     if temperature == 0:
@@ -389,18 +438,40 @@ def sample_with_temperature(preds, temperature=1.0):
     probas = preds
     return np.random.choice(len(probas), p=probas)
 ```
-The function to Generate Notes Based on Emotion is the following:
+How randomness improves creativity:
+	•	The temperature parameter controls the level of randomness:
+	•	High temperature: Introduces more variety by allowing less probable notes to be selected.
+	•	Low temperature: Reduces randomness, focusing on the most likely notes and producing safer, more predictable melodies.
+
+##### Generating Notes
+The model generates notes based on a given emotion and sequence:
+
 ```python
 def generate_notes_by_emotion(model, network_input, int_to_note, n_vocab, desired_emotion, num_notes=100, temperature=1.0):
+    ...
+```
+Convert the desired emotion into a normalized numerical format (e.g., “happiness” → 0.5). Ensure the generated sequence aligns with the specified emotion.
+```
+    ...
     # Encode and normalize the desired emotion
     emotion_encoded = label_encoder.transform([desired_emotion])[0]
     emotion_normalized = emotion_encoded / float(max(label_encoder.transform(label_encoder.classes_)))
-
+    ...
+```
+Choose a random sequence (pattern) from the training data as the starting point.
+```
+    ...
     # Choose a random starting point
     start = np.random.randint(0, len(network_input)-1)
     pattern = network_input[start]
     pattern = pattern.reshape(1, SEQUENCE_LENGTH, 2)
-
+    ...
+```
+Predict the next note by feeding the current pattern to the model.
+	•	Use temperature sampling to add creativity.
+	•	Append the predicted note to prediction_output.
+```
+    ...
     # Set the desired emotion in the pattern
     pattern[0, :, 1] = emotion_normalized
 
@@ -416,16 +487,28 @@ def generate_notes_by_emotion(model, network_input, int_to_note, n_vocab, desire
         # Create new input
         new_note = index / float(n_vocab)
         new_input = np.array([[new_note, emotion_normalized]])
+        ...
+```
+Slide the pattern window forward by adding the predicted note and removing the oldest note.
+```
+        ...
         pattern = np.concatenate((pattern[:, 1:, :], new_input.reshape(1, 1, 2)), axis=1)
     return prediction_output
 ```
+##### Creation of the MIDI file
 We create a midi file:
+
 ```python
 def create_midi(prediction_output, output_filename='output.mid'):
     offset = 0
     output_notes = []
 
     for pattern in prediction_output:
+        ...
+```
+Determine whether each pattern is a single note or a chord and convert patterns into MIDI-compatible notes/chords.
+
+```
         # If the pattern is a chord
         if ('.' in pattern) or pattern.isdigit():
             notes_in_chord = pattern.split('.')
@@ -446,14 +529,23 @@ def create_midi(prediction_output, output_filename='output.mid'):
             new_note.offset = offset
             new_note.storedInstrument = instrument.Piano()
             output_notes.append(new_note)
+        ...
+```
+Adjust the time spacing between notes to avoid overlapping.
+```
+        ...
         # Increase offset to prevent notes from overlapping
         offset += 0.5
+```
+Write the generated sequence into a .mid file for playback:
 
+```
     midi_stream = stream.Stream(output_notes)
     midi_stream.write('midi', fp=output_filename)
     print(f"Melody generated and saved to {output_filename}")
 ```
-and we use the note generator function to generate the melody and save it in the midi file:
+##### Running the Generator
+We finally can run the generator:
 ```python
 # Select the desired emotion
 desired_emotion = 'sadness'  # Can be 'happiness', 'sadness', or 'fear'
@@ -468,12 +560,13 @@ prediction_output = generate_notes_by_emotion(
     num_notes=200,  # Number of notes to generate
     temperature=0.8  # Temperature value for sampling
 )
-
+```
+and save the result in a midi file:
+```
 # Create the MIDI file
 output_filename = os.path.join(RESULTS_DIR, f'melody_{desired_emotion}.mid')
 create_midi(prediction_output, output_filename)
 ```
-
 **Output:**
 ```plaintext
 Melody generated and saved to generation_results/melody_sadness.mid
