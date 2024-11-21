@@ -132,7 +132,7 @@ MFCC provide a compact representation of an audio signal by focusing on perceptu
 
 Each audio track is transformed into a numerical representation such as:
 
-````
+```
 [-144.26477, 123.45465, -21.118523, 36.46806, ...]
 ```
 
