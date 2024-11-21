@@ -52,7 +52,7 @@ Additionally, we will use the following datasets:
 * Dataset for the second script: [EMOPIA](https://zenodo.org/records/5090631#.YPPo-JMzZz8).  
 *(You can find additional information about the two datasets [here](readme_files/dataset_info.md))*
 
-# Song Emotion Analysis Code
+# Code1: Song Emotion Analysis
 The goal is to create and train a model that recognizes the primary type of emotion a given song conveys to the listener. For simplicity, we will use a very basic set of emotions, categorizing the entire emotional spectrum into just the labels of **happiness**, **sadness**, and **fear**.
 
 ![Code1 scheme](readme_files/code1_scheme.png)
@@ -61,6 +61,8 @@ The goal is to create and train a model that recognizes the primary type of emot
 ``` Python
 annotations = pd.read_csv('data/annotations/annotations averaged per song/song_level/static_annotations_averaged_songs_1_2000.csv')
 ```
+The CSV file contains average values for valence (positivity of emotion) and arousal (intensity of emotion) for each song.
+
 ### 2. Emotion Assignment
 ![Emotion cartesian diagram](readme_files/emotion_cartesian_diagram.png)
 We define a function to map the valence and arousal values to the emotions:
@@ -77,7 +79,7 @@ def assign_emotion(row):
     else:
         return None  # Esclude altri stati emotivi
 ```
-and we apply that function to each song:
+The function is applied to each row in the dataset, and the assigned emotion is saved in a new column emotion:
 ``` Python
 annotations['emotion'] = annotations.apply(assign_emotion, axis=1)
 ```
@@ -96,7 +98,7 @@ happiness    582
 fear         210
 ```
 ### 3. Features Extraction (MFCC)
-We define a function to extract the songs features:
+We define a function to extract MFCC (Mel-frequency Cepstral Coefficients) from each audio file to represent the song’s acoustic structure.
 ``` Python
 def extract_features(file_name):
 	try:
@@ -114,6 +116,7 @@ We apply the previously mentioned function to all the audio files:
 100%|████████████████████████████████| 1521/1521 [03:45<00:00, 6.76it/s]
 Numero di campioni con caratteristiche estratte: 1521
 ```
+MFCC provide a compact representation of an audio signal by focusing on perceptually relevant aspects of sound, closely mimicking human auditory perception. You can read more about MFCC [here](readme_files/MFCC_description.md).
 ### 3. Data Preparation
 We now have the **features** matrix and the **labels** vector. We can create a DataFrame to serve as input for our neural network:
 ``` Python
@@ -191,7 +194,7 @@ L'emozione predetta per 'test/3.mp3' è: sadness
 ```
 which matches the emotion perceived while listening to the two tracks.
 
-# Song Emotion Generation Code
+# Code2: Song Emotion Generation
 ![Code2 scheme](readme_files/code2_scheme.png)
 *(you can read a deeper analysis of the code [here](readme_files/code2_description.md))*
 
