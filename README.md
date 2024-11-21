@@ -509,6 +509,7 @@ def create_midi(prediction_output, output_filename='output.mid'):
 Determine whether each pattern is a single note or a chord and convert patterns into MIDI-compatible notes/chords.
 
 ```
+        ...
         # If the pattern is a chord
         if ('.' in pattern) or pattern.isdigit():
             notes_in_chord = pattern.split('.')
@@ -536,10 +537,12 @@ Adjust the time spacing between notes to avoid overlapping.
         ...
         # Increase offset to prevent notes from overlapping
         offset += 0.5
+        ...
 ```
 Write the generated sequence into a .mid file for playback:
 
 ```
+    ...
     midi_stream = stream.Stream(output_notes)
     midi_stream.write('midi', fp=output_filename)
     print(f"Melody generated and saved to {output_filename}")
