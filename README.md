@@ -66,6 +66,7 @@ The CSV file contains average values for valence (positivity of emotion) and aro
 ### 2. Emotion Assignment
 ![Emotion cartesian diagram](readme_files/emotion_cartesian_diagram.png)
 We define a function to map the valence and arousal values to the emotions:
+
 ``` Python
 def assign_emotion(row):
     valence = row[' valence_mean']
@@ -79,26 +80,34 @@ def assign_emotion(row):
     else:
         return None  # Esclude altri stati emotivi
 ```
+
 The function is applied to each row in the dataset, and the assigned emotion is saved in a new column emotion:
+
 ``` Python
 annotations['emotion'] = annotations.apply(assign_emotion, axis=1)
 ```
+
 The terminal output at this point is:
+
 ```
     song_id  valence_mean   valence_std   arousal_mean   arousal_std    emotion
 0        2            3.1          0.94            3.0          0.63    sadness
 3        5            4.4          2.01            5.3          1.85       fear
 4        7            5.8          1.47            6.4          1.69  happiness
 ```
+
 and the distribution of emotions in the dataset is:
+
 ```
 emotion
 sadness      729
 happiness    582
 fear         210
 ```
+
 ### 3. Features Extraction (MFCC)
 We define a function to extract MFCC (Mel-frequency Cepstral Coefficients) from each audio file to represent the song’s acoustic structure.
+
 ``` Python
 def extract_features(file_name):
 	try:
@@ -111,23 +120,31 @@ def extract_features(file_name):
 		print(f"Errore nell'elaborazione del file {file_name}: {e}")
 		return None
 ```
+
 We apply the previously mentioned function to all the audio files:
+
 ```
 100%|████████████████████████████████| 1521/1521 [03:45<00:00, 6.76it/s]
 Numero di campioni con caratteristiche estratte: 1521
 ```
+
 MFCC provide a compact representation of an audio signal by focusing on perceptually relevant aspects of sound, closely mimicking human auditory perception. You can read more about MFCC [here](readme_files/MFCC_description.md).
 
 Each audio track is transformed into a numerical representation such as:
+
 ````
 [-144.26477, 123.45465, -21.118523, 36.46806, ...]
 ```
+
 ### 3. Data Preparation
 We want to convert the audio features and labels into a format suitable for the neural network. To do so, we create a DataFrame to serve as input for our neural network:
+
 ``` Python
 features_df = pd.DataFrame(features, columns=['feature', 'label'])
 ```
+
 The resulting data structure is of the type:
+
 ```
    feature                                             label
 0  [-144.26477, 123.45465, -21.118523, 36.46806, ...    sadness
@@ -137,7 +154,9 @@ The resulting data structure is of the type:
 4  [-270.40778, 132.17728, 3.762553, 25.400993, 1...    sadness
 ...
 ```
+
 We derive **X** and **yy**:
+
 ```Python
 # Otteniamo X
 X = np.array(features_df['feature'].tolist())
@@ -146,19 +165,25 @@ y = np.array(features_df['label'].tolist())
 le = LabelEncoder()
 yy = to_categorical(le.fit_transform(y))
 ```
+
 We partition the elements to obtain a *train set* and a *test set*:
+
 ```Python
 x_train, x_test, y_train, y_test = train_test_split(X, yy, test_size=0.2, random_state=42)
 ```
+
 The resulting data structures will be:
+
 ```
 Forma di X: (1521, 40)
 Forma di yy: (1521, 3)
 Numero di campioni nel training set: 1216
 Numero di campioni nel testing set: 305
 ```
+
 ### 4. Training
 We want now to build and train a neural network to classify emotions. The structure of our model is:
+
 ```
  Layer (type)                        │ Output Shape                │ Param #
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━
@@ -173,7 +198,9 @@ We want now to build and train a neural network to classify emotions. The struct
  dense_2 (Dense)                     │ (None, 3)                   │ 387
  activation_2 (Activation)           │ (None, 3)                   │ 0
 ```
+
 We train the model:
+
 ```Python
 checkpointer = ModelCheckpoint(filepath='saved_models/audio_classification.keras', verbose=1, save_best_only=True)
 
@@ -181,23 +208,29 @@ history = model.fit(x_train, y_train, batch_size=32, epochs=20, validation_data=
 ```
 ### 5. Test
 At the end of the training, we use the test set
+
 ```Python
 model.load_weights('saved_models/audio_classification.keras')
 score = model.evaluate(x_test, y_test, verbose=0)
 ```
+
 to evaluate the prediction accuracy. The result obtained is:
+
 ```
 Accuracy sul test set: 70.49%
 ```
+
 ### 6. Prediction
 From the initial song dataset, I removed the samples [3.mp3](test/3.mp3) and [4.mp3](test/4.mp3) and placed these samples in a separate test folder, apart from the other dataset elements.
 
 We will use these two songs to test if the model's prediction matches the emotion I perceived while listening to these two songs. The terminal output is:
+
 ```
 L'emozione predetta per 'test/4.mp3' è: happiness
 
 L'emozione predetta per 'test/3.mp3' è: sadness
 ```
+
 which matches the emotion perceived while listening to the two tracks.
 
 # Code2: Song Emotion Generation
