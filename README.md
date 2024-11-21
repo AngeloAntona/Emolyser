@@ -117,12 +117,17 @@ We apply the previously mentioned function to all the audio files:
 Numero di campioni con caratteristiche estratte: 1521
 ```
 MFCC provide a compact representation of an audio signal by focusing on perceptually relevant aspects of sound, closely mimicking human auditory perception. You can read more about MFCC [here](readme_files/MFCC_description.md).
+
+Each audio track is transformed into a numerical representation such as:
+````
+[-144.26477, 123.45465, -21.118523, 36.46806, ...]
+```
 ### 3. Data Preparation
-We now have the **features** matrix and the **labels** vector. We can create a DataFrame to serve as input for our neural network:
+We want to convert the audio features and labels into a format suitable for the neural network. To do so, we create a DataFrame to serve as input for our neural network:
 ``` Python
 features_df = pd.DataFrame(features, columns=['feature', 'label'])
 ```
-The data structure will be of the type:
+The resulting data structure is of the type:
 ```
    feature                                             label
 0  [-144.26477, 123.45465, -21.118523, 36.46806, ...    sadness
@@ -153,6 +158,7 @@ Numero di campioni nel training set: 1216
 Numero di campioni nel testing set: 305
 ```
 ### 4. Training
+We want now to build and train a neural network to classify emotions. The structure of our model is:
 ```
  Layer (type)                        │ Output Shape                │ Param #
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━
