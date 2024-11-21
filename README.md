@@ -121,7 +121,7 @@ features_df = pd.DataFrame(features, columns=['feature', 'label'])
 ```
 The data structure will be of the type:
 ```
-	feature                                             label
+   feature                                             label
 0  [-144.26477, 123.45465, -21.118523, 36.46806, ...    sadness
 1  [-148.90979, 125.012566, -3.8318107, 33.42975,...       fear
 2  [-155.02774, 115.9887, 19.196737, 53.457127, 1...  happiness
