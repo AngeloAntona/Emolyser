@@ -52,7 +52,7 @@ Additionally, we will use the following datasets:
 * Dataset for the second script: [EMOPIA](https://zenodo.org/records/5090631#.YPPo-JMzZz8).  
 *(You can find additional information about the two datasets [here](readme_files/dataset_info.md))*
 
-# Code1: Song Emotion Analysis
+# CODE1: Song Emotion Analysis
 The goal is to create and train a model that recognizes the primary type of emotion a given song conveys to the listener. For simplicity, we will use a very basic set of emotions, categorizing the entire emotional spectrum into just the labels of **happiness**, **sadness**, and **fear**.
 
 ![Code1 scheme](readme_files/code1_scheme.png)
@@ -233,7 +233,7 @@ L'emozione predetta per 'test/3.mp3' è: sadness
 
 which matches the emotion perceived while listening to the two tracks.
 
-# Code2: Song Emotion Generation
+# CODE2: Song Emotion Generation
 ![Code2 scheme](readme_files/code2_scheme.png)
 *(you can read a deeper analysis of the code [here](readme_files/code2_description.md))*
 
