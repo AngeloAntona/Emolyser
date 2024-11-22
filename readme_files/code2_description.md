@@ -74,9 +74,9 @@ encoded_emotions = label_encoder.fit_transform(all_emotions) # trasforma le etic
 ### Creating Input and Output Sequences
 We create fixed-length sequences (`SEQUENCE_LENGTH`) for the model's input and output.
 ```python
-network_input = []
-network_output = []
-network_emotion = []
+network_input = [] #  Stores sequences of notes (input for the model).
+network_output = [] #  Stores the next note (target output for the model).
+network_emotion = [] # Stores the emotion associated with each sequence (input for conditioning).
 
 for i in range(len(notes_as_int) - SEQUENCE_LENGTH):
     seq_in = notes_as_int[i:i + SEQUENCE_LENGTH]
@@ -86,6 +86,7 @@ for i in range(len(notes_as_int) - SEQUENCE_LENGTH):
     network_output.append(seq_out)
     network_emotion.append(emotion)
 ```
+The input and output sequences created in this section are used later in the code as the training data for the neural network.
 
 ### Limiting the Number of Patterns
 To manage computational resources, we limit the number of patterns used for training.
