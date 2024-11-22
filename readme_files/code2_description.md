@@ -19,24 +19,26 @@ For each emotion, we extract the notes from the MIDI files located in the folder
 ```python
 def get_notes(emotion):
     notes = []
-    files = glob.glob(f"data_midi/{emotion}/*.mid")
-    for file in tqdm(files, desc=f"Processing {emotion} files"):
-        midi = converter.parse(file)
+    files = glob.glob(f"data_midi/{emotion}/*.mid") # usa glob per individuare tutti i files midi all'interno della cartella {emotions}.
+    for file in tqdm(files, desc=f"Processing {emotion} files"): # cicle over all the files
+        midi = converter.parse(file) # use a music21 function to convert the midi file in a structured type suitable for processing.
 
         try:
+            # if the midi File has different instruments:
             s2 = instrument.partitionByInstrument(midi)
-            notes_to_parse = s2.parts[0].recurse()
+            notes_to_parse = s2.parts[0].recurse() # extract notes and chords
         except:
-            notes_to_parse = midi.flat.notes
+            # if the midi file has just one instrument:
+            notes_to_parse = midi.flat.notes # extract notes and chords
 
-        for element in notes_to_parse:
+        for element in notes_to_parse: # each element can be a single note or a chord
             if isinstance(element, note.Note):
                 notes.append(str(element.pitch))
             elif isinstance(element, chord.Chord):
-                if len(element.pitches) == 1:
+                if len(element.pitches) == 1: # single note chord
                     notes.append(str(element.pitches[0]))
                 else:
-                    notes.append('.'.join(str(n) for n in element.normalOrder))
+                    notes.append('.'.join(str(n) for n in element.normalOrder)) # multiple note chord
     return notes
 ```
 
