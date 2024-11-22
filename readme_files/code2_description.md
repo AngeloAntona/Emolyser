@@ -110,18 +110,18 @@ network_emotion = np.array(network_emotion)
 # Normalization of notes
 n_vocab = len(unique_notes)
 network_input = network_input / float(n_vocab)
-network_input = network_input.reshape((network_input.shape[0], SEQUENCE_LENGTH, 1))
+network_input = network_input.reshape((network_input.shape[0], SEQUENCE_LENGTH, 1)) # Adds a third dimension to match the expected input format for recurrent neural networks (RNNs like GRUs or LSTMs).
 
 # Normalization and repetition of emotion
-emotion_normalized = network_emotion / float(max(network_emotion))
-emotion_input = emotion_normalized.reshape(-1, 1, 1)
-emotion_input = np.repeat(emotion_input, SEQUENCE_LENGTH, axis=1)
+emotion_normalized = network_emotion / float(max(network_emotion)) 
+emotion_input = emotion_normalized.reshape(-1, 1, 1) # Neural networks process inputs in 2D or 3D arrays (depending on the architecture)
+emotion_input = np.repeat(emotion_input, SEQUENCE_LENGTH, axis=1) # Ripetiamo l'emozione per ogni nota della sequenza (ogni sequenza è caratterizzata da una singola emozione)
 
 # Concatenation of notes and emotions as features
-network_input = np.concatenate((network_input, emotion_input), axis=2)
+network_input = np.concatenate((network_input, emotion_input), axis=2) # concateniamo le strutture contenenti note ed emozioni così che ad ogni nota, alla "cella sotto" corrisponda la sua emozione.
 
 # Conversion of output to categorical
-network_output = to_categorical(network_output, num_classes=n_vocab)
+network_output = to_categorical(network_output, num_classes=n_vocab) # converte l'output in formato numerico invece che simbolico per poter essere processato dalla neural network.
 ```
 
 ### Verifying Array Dimensions
