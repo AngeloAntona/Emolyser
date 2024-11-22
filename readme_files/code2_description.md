@@ -57,17 +57,18 @@ all_notes, all_emotions = get_all_notes_and_emotions()
 ```
 
 ### Tokenization of Notes and Emotions
+Convert each unique note or chord into a unique integer ID. This numerical representation is necessary for the neural network, which cannot process textual or symbolic data directl
 - **Notes**: Convert the notes into integers using a mapping dictionary.
 - **Emotions**: Encode the emotions using `LabelEncoder` from scikit-learn.
 ```python
 # Tokenization of notes
-unique_notes = sorted(set(all_notes))
-note_to_int = {note: number for number, note in enumerate(unique_notes)}
-notes_as_int = [note_to_int[note] for note in all_notes]
+unique_notes = sorted(set(all_notes)) # crea un set di note, contenente ogni nota solo una volta. 
+note_to_int = {note: number for number, note in enumerate(unique_notes)} # crea un mapping tra le note presenti in unique_notes ed un semplice set di ID 1,2,3,...
+notes_as_int = [note_to_int[note] for note in all_notes] # applica il mapping ottenendo notes_as_int
 
 # Encoding of emotions
-label_encoder = LabelEncoder()
-encoded_emotions = label_encoder.fit_transform(all_emotions)
+label_encoder = LabelEncoder() # trasforma le etichette in formato numerico
+encoded_emotions = label_encoder.fit_transform(all_emotions) # trasforma le etichette numeriche in formato one-hot.
 ```
 
 ### Creating Input and Output Sequences
