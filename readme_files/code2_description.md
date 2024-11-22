@@ -49,8 +49,8 @@ def get_all_notes_and_emotions():
     all_emotions = []
     for emotion in EMOTIONS:
         notes = get_notes(emotion)
-        all_notes.extend(notes)
-        all_emotions.extend([emotion]*len(notes))
+        all_notes.extend(notes) # similar to .append, but adds each element of notes individually to all_notes.
+        all_emotions.extend([emotion]*len(notes)) # similar to .append, but adds each element of notes individually to all_notes.
     return all_notes, all_emotions
 
 all_notes, all_emotions = get_all_notes_and_emotions()
