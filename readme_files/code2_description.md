@@ -230,30 +230,36 @@ Epoch 50: loss did not improve from 3.49500
 ```
 
 ## Melody Generation
-### Preparation for Generation
-We create an inverse dictionary to convert integers back to notes and define a function for temperature sampling.
+### Creating an Inverse Dictionary
+During training, notes are converted to integers (note_to_int) for numerical processing. Now, during generation, the model predicts integers as outputs. These integers need to be converted back into their corresponding notes or chords to make the predictions understandable.
 ```python
 int_to_note = {number: note for note, number in note_to_int.items()}
+```
+### Temperature Sampling Function Definition
+The *sample_with_temperature* function adds controlled randomness to the model’s predictions. It helps generate more creative melodies by adjusting the influence of less likely notes in the probability distribution.
 
+```
 def sample_with_temperature(preds, temperature=1.0):
-    preds = np.asarray(preds).astype('float64')
+    preds = np.asarray(preds).astype('float64') 
     if temperature == 0:
         temperature = 1e-10
-    preds = np.log(preds + 1e-10) / temperature
-    exp_preds = np.exp(preds)
-    preds = exp_preds / np.sum(exp_preds)
+    preds = np.log(preds + 1e-10) / temperature # Smooths the predictions to make smaller probabilities more significant.
+    exp_preds = np.exp(preds) # Converts the scaled log values back into regular probabilities.
+    preds = exp_preds / np.sum(exp_preds) # Ensures the probabilities sum to 1, forming a valid distribution.
     probas = preds
-    return np.random.choice(len(probas), p=probas)
+    return np.random.choice(len(probas), p=probas) # Chooses one of the notes based on the adjusted probability distribution (probas).
 ```
 
 ### Function to Generate Notes Based on Emotion
+We define a function that generates a sequence of notes based on a given emotion using a trained model. It combines the randomness of temperature sampling with emotion conditioning to produce expressive melodies.
+
 ```python
 def generate_notes_by_emotion(model, network_input, int_to_note, n_vocab, desired_emotion, num_notes=100, temperature=1.0):
     # Encode and normalize the desired emotion
     emotion_encoded = label_encoder.transform([desired_emotion])[0]
     emotion_normalized = emotion_encoded / float(max(label_encoder.transform(label_encoder.classes_)))
 
-    # Choose a random starting point
+    # Randomly chooses an existing sequence (pattern) from the input data (network_input) to initialize the melody generation.
     start = np.random.randint(0, len(network_input)-1)
     pattern = network_input[start]
     pattern = pattern.reshape(1, SEQUENCE_LENGTH, 2)
