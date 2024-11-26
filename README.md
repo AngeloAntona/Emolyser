@@ -162,8 +162,8 @@ We derive **X** and **yy**:
 X = np.array(features_df['feature'].tolist())
 # Otteniamo yy
 y = np.array(features_df['label'].tolist())
-le = LabelEncoder()
-yy = to_categorical(le.fit_transform(y))
+le = LabelEncoder() # converte le stringe in numeri interi (es. 1,2,3)
+yy = to_categorical(le.fit_transform(y)) # converte in formato one-hot.
 ```
 
 We partition the elements to obtain a *train set* and a *test set*:

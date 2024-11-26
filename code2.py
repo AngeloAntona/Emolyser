@@ -265,7 +265,7 @@ def create_midi(prediction_output, output_filename='output.mid'):
 # ============================================
 
 # Seleziona l'emozione desiderata
-desired_emotion = 'happiness'  # Può essere 'happiness', 'sadness' o 'fear'
+desired_emotion = 'fear'  # Può essere 'happiness', 'sadness' o 'fear'
 
 # Genera la sequenza
 prediction_output = generate_notes_by_emotion(
@@ -275,7 +275,7 @@ prediction_output = generate_notes_by_emotion(
     n_vocab,
     desired_emotion,
     num_notes=200,  # Puoi modificare questo numero
-    temperature=0.8  # Puoi sperimentare con diversi valori di temperatura
+    temperature=0.5  # Puoi sperimentare con diversi valori di temperatura
 )
 
 # Creazione del file MIDI
