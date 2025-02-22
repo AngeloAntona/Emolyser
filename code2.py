@@ -8,7 +8,7 @@ from collections import Counter
 import tensorflow as tf
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, LSTM, GRU, Dense, Dropout
+from tensorflow.keras.layers import Input, LSTM, GRU, Dense, Dropout, Embedding, Concatenate
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from sklearn.preprocessing import LabelEncoder
 
@@ -90,62 +90,67 @@ label_encoder = LabelEncoder()
 encoded_emotions = label_encoder.fit_transform(all_emotions)
 
 # Creazione delle sequenze di input e output
-network_input = []
+network_input_notes = []
+network_input_emotions = []
 network_output = []
-network_emotion = []
 
 for i in range(len(notes_as_int) - SEQUENCE_LENGTH):
-    seq_in = notes_as_int[i:i + SEQUENCE_LENGTH]
+    seq_in_notes = notes_as_int[i:i + SEQUENCE_LENGTH]
+    seq_in_emotions = encoded_emotions[i:i + SEQUENCE_LENGTH]
     seq_out = notes_as_int[i + SEQUENCE_LENGTH]
-    emotion = encoded_emotions[i + SEQUENCE_LENGTH]
-    network_input.append(seq_in)
+    network_input_notes.append(seq_in_notes)
+    network_input_emotions.append(seq_in_emotions)
     network_output.append(seq_out)
-    network_emotion.append(emotion)
 
 # Limitare il numero di pattern
-network_input = network_input[:MAX_PATTERNS]
+network_input_notes = network_input_notes[:MAX_PATTERNS]
+network_input_emotions = network_input_emotions[:MAX_PATTERNS]
 network_output = network_output[:MAX_PATTERNS]
-network_emotion = network_emotion[:MAX_PATTERNS]
 
-# Converti l'input in array numpy
-network_input = np.array(network_input)
+# Converti gli input in array numpy
+network_input_notes = np.array(network_input_notes)
+network_input_emotions = np.array(network_input_emotions)
 network_output = np.array(network_output)
-network_emotion = np.array(network_emotion)
 
-# Normalizzazione delle note
-n_vocab = len(unique_notes)
-network_input = network_input / float(n_vocab)
-network_input = network_input.reshape((network_input.shape[0], SEQUENCE_LENGTH, 1))
-
-# Normalizzazione e ripetizione dell'emozione
-emotion_normalized = network_emotion / float(max(network_emotion))
-emotion_input = emotion_normalized.reshape(-1, 1, 1)
-emotion_input = np.repeat(emotion_input, SEQUENCE_LENGTH, axis=1)
-
-# Concatenazione delle note e delle emozioni come caratteristiche
-network_input = np.concatenate((network_input, emotion_input), axis=2)
+# Numero di note e di emozioni
+n_vocab_notes = len(unique_notes)
+n_vocab_emotions = len(EMOTIONS)
 
 # Conversione dell'output in categoriale
-network_output = to_categorical(network_output, num_classes=n_vocab)
+network_output = to_categorical(network_output, num_classes=n_vocab_notes)
 
 # Verifica delle dimensioni degli array
-print("Dimensioni input:", network_input.shape)  # Dovrebbe essere (numero_di_campioni, SEQUENCE_LENGTH, 2)
+print("Dimensioni input note:", network_input_notes.shape)  # (numero_di_campioni, SEQUENCE_LENGTH)
+print("Dimensioni input emozioni:", network_input_emotions.shape)  # (numero_di_campioni, SEQUENCE_LENGTH)
 print("Dimensioni output:", network_output.shape)
 
 # ============================================
 # ============= DEFINIZIONE DEL MODELLO ======
 # ============================================
 
-def create_network(input_shape, n_vocab):
-    inputs = Input(shape=(input_shape[1], input_shape[2]))
-    x = GRU(256, return_sequences=True)(inputs)
-    x = GRU(256)(x)
-    x = Dropout(0.3)(x)
-    x = Dense(128, activation='relu')(x)
-    x = Dropout(0.3)(x)
-    outputs = Dense(n_vocab, activation='softmax')(x)
+def create_network(input_shape_notes, input_shape_emotions, n_vocab_notes, n_vocab_emotions):
+    # Input per le note
+    notes_input = Input(shape=(input_shape_notes[1],), name='notes_input')
+    # Embedding per le note
+    notes_embedding = Embedding(input_dim=n_vocab_notes, output_dim=128, input_length=SEQUENCE_LENGTH)(notes_input)
 
-    model = Model(inputs, outputs)
+    # Input per le emozioni
+    emotions_input = Input(shape=(input_shape_emotions[1],), name='emotions_input')
+    # Embedding per le emozioni
+    emotions_embedding = Embedding(input_dim=n_vocab_emotions, output_dim=8, input_length=SEQUENCE_LENGTH)(emotions_input)
+
+    # Concatenazione delle embeddings
+    x = Concatenate()([notes_embedding, emotions_embedding])
+
+    # Layer ricorrenti
+    x = GRU(512, return_sequences=True)(x)
+    x = GRU(512)(x)
+    x = Dropout(0.4)(x)
+    x = Dense(256, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    outputs = Dense(n_vocab_notes, activation='softmax')(x)
+
+    model = Model([notes_input, emotions_input], outputs)
     model.compile(loss='categorical_crossentropy', optimizer='adam')
     return model
 
@@ -159,7 +164,7 @@ if os.path.exists(MODEL_PATH):
 else:
     print("Nessun modello esistente trovato. Addestramento del nuovo modello...")
     # Creazione del modello
-    model = create_network(network_input.shape, n_vocab)
+    model = create_network(network_input_notes.shape, network_input_emotions.shape, n_vocab_notes, n_vocab_emotions)
     model.summary()
 
     # Definizione dei callback
@@ -179,7 +184,13 @@ else:
     callbacks_list = [checkpoint, early_stopping]
 
     # Aumentiamo il numero di epoche per migliorare l'apprendimento
-    history = model.fit(network_input, network_output, epochs=50, batch_size=32, callbacks=callbacks_list)
+    history = model.fit(
+        [network_input_notes, network_input_emotions],
+        network_output,
+        epochs=100,
+        batch_size=64,  # Puoi aumentare il batch size
+        callbacks=callbacks_list
+    )
 
 # ============================================
 # ============= GENERAZIONE MELODIA ==========
@@ -188,7 +199,7 @@ else:
 # Creazione del dizionario inverso
 int_to_note = {number: note for note, number in note_to_int.items()}
 
-# Funzione per il campionamento con temperatura
+# Funzioni di campionamento avanzate
 def sample_with_temperature(preds, temperature=1.0):
     preds = np.asarray(preds).astype('float64')
     if temperature == 0:
@@ -196,35 +207,56 @@ def sample_with_temperature(preds, temperature=1.0):
     preds = np.log(preds + 1e-10) / temperature
     exp_preds = np.exp(preds)
     preds = exp_preds / np.sum(exp_preds)
-    probas = preds
-    return np.random.choice(len(probas), p=probas)
+    return np.random.choice(len(preds), p=preds)
 
-def generate_notes_by_emotion(model, network_input, int_to_note, n_vocab, desired_emotion, num_notes=100, temperature=1.0):
-    # Codifica e normalizza l'emozione desiderata
+def top_k_sampling(preds, k=10):
+    preds = np.asarray(preds).astype('float64')
+    indices = np.argpartition(preds, -k)[-k:]
+    top_preds = preds[indices]
+    top_preds = top_preds / np.sum(top_preds)
+    return np.random.choice(indices, p=top_preds)
+
+def nucleus_sampling(preds, p=0.9):
+    preds = np.asarray(preds).astype('float64')
+    sorted_indices = np.argsort(preds)[::-1]
+    cumulative_probs = np.cumsum(preds[sorted_indices])
+    cutoff = np.where(cumulative_probs >= p)[0][0] + 1
+    top_indices = sorted_indices[:cutoff]
+    top_preds = preds[top_indices]
+    top_preds = top_preds / np.sum(top_preds)
+    return np.random.choice(top_indices, p=top_preds)
+
+def generate_notes_by_emotion(model, network_input_notes, network_input_emotions, int_to_note, n_vocab_notes, desired_emotion, num_notes=100, temperature=1.0):
+    # Codifica l'emozione desiderata
     emotion_encoded = label_encoder.transform([desired_emotion])[0]
-    emotion_normalized = emotion_encoded / float(max(label_encoder.transform(label_encoder.classes_)))
 
     # Scegli un punto di partenza casuale
-    start = np.random.randint(0, len(network_input)-1)
-    pattern = network_input[start]
-    pattern = pattern.reshape(1, SEQUENCE_LENGTH, 2)
+    start = np.random.randint(0, len(network_input_notes)-1)
+    pattern_notes = network_input_notes[start]
+    pattern_emotions = network_input_emotions[start]
 
     # Imposta l'emozione desiderata nel pattern
-    pattern[0, :, 1] = emotion_normalized
+    pattern_emotions[:] = emotion_encoded
 
     prediction_output = []
 
     for note_index in range(num_notes):
-        prediction = model.predict(pattern, verbose=0)
-        # Utilizza il campionamento con temperatura
-        index = sample_with_temperature(prediction[0], temperature)
+        prediction_input_notes = np.reshape(pattern_notes, (1, len(pattern_notes)))
+        prediction_input_emotions = np.reshape(pattern_emotions, (1, len(pattern_emotions)))
+
+        prediction = model.predict([prediction_input_notes, prediction_input_emotions], verbose=0)[0]
+
+        # Utilizza il campionamento con temperatura o altre tecniche
+        # index = sample_with_temperature(prediction, temperature)
+        # index = top_k_sampling(prediction, k=10)
+        index = nucleus_sampling(prediction, p=0.9)
+
         result = int_to_note[index]
         prediction_output.append(result)
 
-        # Crea il nuovo input
-        new_note = index / float(n_vocab)
-        new_input = np.array([[new_note, emotion_normalized]])
-        pattern = np.concatenate((pattern[:, 1:, :], new_input.reshape(1, 1, 2)), axis=1)
+        # Aggiorna il pattern per il prossimo input
+        pattern_notes = np.append(pattern_notes[1:], index)
+        pattern_emotions = np.append(pattern_emotions[1:], emotion_encoded)
     return prediction_output
 
 def create_midi(prediction_output, output_filename='output.mid'):
@@ -265,17 +297,18 @@ def create_midi(prediction_output, output_filename='output.mid'):
 # ============================================
 
 # Seleziona l'emozione desiderata
-desired_emotion = 'fear'  # Può essere 'happiness', 'sadness' o 'fear'
+desired_emotion = 'happiness'  # Può essere 'happiness', 'sadness' o 'fear'
 
 # Genera la sequenza
 prediction_output = generate_notes_by_emotion(
     model,
-    network_input,
+    network_input_notes,
+    network_input_emotions,
     int_to_note,
-    n_vocab,
+    n_vocab_notes,
     desired_emotion,
     num_notes=200,  # Puoi modificare questo numero
-    temperature=0.5  # Puoi sperimentare con diversi valori di temperatura
+    temperature=0.7  # Puoi sperimentare con diversi valori di temperatura
 )
 
 # Creazione del file MIDI
