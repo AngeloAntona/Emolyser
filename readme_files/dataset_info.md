@@ -1,6 +1,5 @@
 # DEAM (Dataset for Emotion Analysis in Music)
 
-"""
 Overview
 DEAM is designed for emotion analysis in music, supporting research in Music Information Retrieval (MIR), machine learning, and affective computing.
 
@@ -16,11 +15,10 @@ Applications
 - Emotion recognition and classification in music.
 - Study of dynamic emotional responses.
 - Training and validation of ML models for MIR.
-"""
+
 
 # EMOPIA (EMOtional POPIAno Dataset)
 
-"""
 Overview
 EMOPIA focuses on the emotional dimension of pop piano, contributing to studies in MIR, music generation, and computational musicology.
 
@@ -34,4 +32,3 @@ Content
 Applications
 - Emotion classification and emotional music composition.
 - Analysis of expressiveness in piano performance.
-"""
